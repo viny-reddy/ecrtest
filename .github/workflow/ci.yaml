@@ -5,9 +5,9 @@ name: CI
 on:
 
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -32,17 +32,31 @@ jobs:
           id: login-ecr
           uses: aws-actions/amazon-ecr-login@v1
           
-        - name: Build, tag, and push image to Amazon ECR
-#           uses: actions/checkout@v2
-          env:
-              ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-              ECR_REPOSITORY: demo_ecr
-              IMAGE_TAG: ${{ github.sha }}
-          run: |
-                docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-                echo "Pushing image to ECR..."
-                docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-                echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+#         - name: Build, tag, and push image to Amazon ECR
+# #           uses: actions/checkout@v2
+#           env:
+#               ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#               ECR_REPOSITORY: demo_ecr
+#               IMAGE_TAG: ${{ github.sha }}
+#           run: |
+#                 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#                 echo "Pushing image to ECR..."
+#                 docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#                 echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+        - uses: actions/checkout@v2
+        - uses: docker://ghcr.io/kciter/aws-ecr-action:latest
+          with:
+            access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+            repo: testecrlsp
+            region: us-east-1
+            tags: latest,${{ github.sha }}
+            create_repo: true
+            image_scanning_configuration: true
+            set_repo_policy: true
+            repo_policy_file: repo-policy.json
 
 
 
